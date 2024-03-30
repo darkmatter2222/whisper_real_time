@@ -95,13 +95,7 @@ def main():
                 # WebSocket communication for transcription
                 text = handle_websocket_communication(audio_data)
                 if text is not None:
-                    if phrase_complete:
-                        transcription.append(text)
-                    else:
-                        transcription[-1] = text
-
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    print("\n".join(transcription))
+                    print(text)
                 else:
                     print("Error receiving transcription.")
             else:
