@@ -6,6 +6,11 @@ import numpy as np
 import speech_recognition as sr
 import whisper
 import torch
+device = torch.device('cuda')
+print(torch.cuda.is_available())  # Returns True if GPU is available
+print(torch.cuda.device_count())  # Number of available GPUs
+print(torch.cuda.current_device())  # Device number of the active GPU (e.g., 0)
+
 
 from datetime import datetime, timedelta
 from queue import Queue
@@ -61,6 +66,7 @@ def main():
 
     # Load / Download model
     model = args.model
+    model = 'small'
     if args.model != "large" and not args.non_english:
         model = model + ".en"
     audio_model = whisper.load_model(model)
@@ -113,6 +119,7 @@ def main():
 
                 # Read the transcription.
                 result = audio_model.transcribe(audio_np, fp16=torch.cuda.is_available())
+
                 text = result['text'].strip()
 
                 # If we detected a pause between recordings, add a new item to our transcription.
@@ -124,8 +131,7 @@ def main():
 
                 # Clear the console to reprint the updated transcription.
                 os.system('cls' if os.name=='nt' else 'clear')
-                for line in transcription:
-                    print(line)
+                print(transcription[len(transcription)-1])
                 # Flush stdout.
                 print('', end='', flush=True)
             else:
@@ -134,9 +140,7 @@ def main():
         except KeyboardInterrupt:
             break
 
-    print("\n\nTranscription:")
-    for line in transcription:
-        print(line)
+
 
 
 if __name__ == "__main__":
