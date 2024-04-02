@@ -3,7 +3,7 @@ import websockets
 
 # WebSocket client function to send audio data and receive transcription
 async def transcribe_with_websocket(audio_bytes):
-    uri = "wss://dym-cat.fiservcstaifactory.com:443"  # Assuming the WebSocket server is running on this URI
+    uri = ""  # Assuming the WebSocket server is running on this URI
     async with websockets.connect(uri) as websocket:
         await websocket.send(audio_bytes)
         transcription = await websocket.recv()
