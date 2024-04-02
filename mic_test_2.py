@@ -29,7 +29,7 @@ async def handle_websocket_communication(audio_data, websocket):
 
 # Main function with an open WebSocket connection for the life of the app
 async def main_async():
-    uri = "wss://dym-cat.fiservcstaifactory.com:443"
+    uri = ""
     async with websockets.connect(uri) as websocket:
         # Your existing setup code goes here, up to the while True loop
 
