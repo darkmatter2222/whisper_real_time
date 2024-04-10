@@ -13,7 +13,8 @@ class Program
     private static readonly int bufferSizeInSeconds = 5;
     private static readonly int sampleRate = 16000; // Sample rate in Hz
     private static readonly int bitsPerSample = 16; // Bits per sample
-    private static readonly int channels = 1; // Number of channels (1 for mono, 2 for stereo)
+    private static readonly int channels = 1; // Mono
+    private static readonly float EnergyThreshold = 0.001f; // Adjust this threshold based on testing and requirements
 
     static async Task Main(string[] args)
     {
@@ -51,10 +52,17 @@ class Program
 
             if (bufferPosition >= audioBuffer.Length)
             {
-                // Buffer is full, send data
-                if (websocketConnection.State == WebSocketState.Open)
+                // Check if the energy level of the buffer exceeds the threshold before sending
+                if (CalculateEnergy(audioBuffer) > EnergyThreshold)
                 {
-                    await websocketConnection.SendAsync(new ArraySegment<byte>(audioBuffer), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    if (websocketConnection.State == WebSocketState.Open)
+                    {
+                        await websocketConnection.SendAsync(new ArraySegment<byte>(audioBuffer), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Audio energy below threshold. Not sending.");
                 }
 
                 // Reset buffer position
@@ -64,6 +72,19 @@ class Program
 
         waveIn.StartRecording();
         Console.WriteLine("Microphone is recording. Press Ctrl+C to stop.");
+    }
+
+    private static float CalculateEnergy(byte[] buffer)
+    {
+        double sum = 0;
+        // Assuming 16-bit audio
+        for (int i = 0; i < buffer.Length; i += 2)
+        {
+            short sample = (short)((buffer[i + 1] << 8) | buffer[i]);
+            sum += sample * sample;
+        }
+        double rms = Math.Sqrt(sum / (buffer.Length / 2));
+        return (float)(rms / short.MaxValue);
     }
 
     private static async Task CleanupAsync()
