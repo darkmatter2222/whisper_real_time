@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NAudio.Wave;
@@ -26,6 +27,9 @@ class Program
 
         Console.WriteLine("Starting WebSocket client for transcription...");
         await SetupMicrophoneAndWebSocket();
+
+        // Start the task to listen for messages from the WebSocket
+        var listeningTask = ListenForWebSocketResponses();
 
         // Keep the application running until interrupted
         await Task.Delay(Timeout.Infinite);
@@ -58,6 +62,7 @@ class Program
                     if (websocketConnection.State == WebSocketState.Open)
                     {
                         await websocketConnection.SendAsync(new ArraySegment<byte>(audioBuffer), WebSocketMessageType.Binary, true, CancellationToken.None);
+                        Console.WriteLine("Audio sent to server.");
                     }
                 }
                 else
@@ -72,6 +77,27 @@ class Program
 
         waveIn.StartRecording();
         Console.WriteLine("Microphone is recording. Press Ctrl+C to stop.");
+    }
+
+    private static async Task ListenForWebSocketResponses()
+    {
+        var buffer = new byte[4096*20];
+        try
+        {
+            while (websocketConnection.State == WebSocketState.Open)
+            {
+                var result = await websocketConnection.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    Console.WriteLine($"Response from server: {message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred while listening for WebSocket responses: {ex.Message}");
+        }
     }
 
     private static float CalculateEnergy(byte[] buffer)
