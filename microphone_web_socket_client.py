@@ -32,7 +32,7 @@ async def manage_websocket_communication(audio_data):
     global websocket_connection
     try:
         if websocket_connection is None or websocket_connection.closed:
-            websocket_connection = await establish_websocket_connection("w3")
+            websocket_connection = await establish_websocket_connection("wss://dym-cat.fiservcstaifactory.com:443")
         return await transcribe_with_websocket(audio_data, websocket_connection)
     except Exception as e:
         print(f"WebSocket error: {e}")
